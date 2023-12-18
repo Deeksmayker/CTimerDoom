@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <winuser.h>
 #include <stdint.h>
+#include<math.h>
 
 //const char g_szClassName[] = "myWindowClass";
 
@@ -13,6 +14,10 @@ struct{
 } typedef Render_Buffer;
 
 static Render_Buffer render_buffer;
+
+#include "rendering.c"
+
+char *int_to_string(int number);
 
 // Step 4: the Window Procedure
 LRESULT CALLBACK WndProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -38,9 +43,9 @@ LRESULT CALLBACK WndProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
             }
 
             render_buffer.pixels = malloc(sizeof(uint32_t)*render_buffer.width * render_buffer.height);
-            for (int i = 0; i < render_buffer.width * render_buffer.height; i++){
-                render_buffer.pixels[i] = 0;
-            }
+            // for (int i = 0; i < render_buffer.width * render_buffer.height; i++){
+            //     render_buffer.pixels[i] = 0;
+            // }
 
             render_buffer.bitmap.bmiHeader.biSize = sizeof(render_buffer.bitmap.bmiHeader);
             render_buffer.bitmap.bmiHeader.biWidth = render_buffer.width;
@@ -62,85 +67,64 @@ LRESULT CALLBACK WndProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-    LPSTR lpCmdLine, int nCmdShow){
-	WNDCLASSA window_class = {0};
-	window_class.style = CS_HREDRAW|CS_VREDRAW;
-	window_class.lpfnWndProc = WndProc;
-	window_class.lpszClassName = "Game_Window_Class";
+int time = 0;
 
-	RegisterClassA(&window_class);
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow){
+    WNDCLASSA window_class = {0};
+    window_class.style = CS_HREDRAW|CS_VREDRAW;
+    window_class.lpfnWndProc = WndProc;
+    window_class.lpszClassName = "Game_Window_Class";
 
-	HWND window = CreateWindowExA(0, window_class.lpszClassName, "Really cool and flexible window no viruses at all", 
-			WS_VISIBLE|WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1280, 720, 0, 0, 0, 0);
+    RegisterClassA(&window_class);
 
-	HDC hdc = GetDC(window);
+    HWND window = CreateWindowExA(0, window_class.lpszClassName, "Really cool and flexible window no viruses at all", WS_VISIBLE|WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1280, 720, 0, 0, 0, 0);
 
-	while (running){
-		//Input
-		MSG msg;
-		while (PeekMessageA(&msg, window, 0, 0, PM_REMOVE)){
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
+    HDC hdc = GetDC(window);
 
-		//Simulation
+    while (running){
+        //Input
+        MSG msg;
+        while (PeekMessageA(&msg, window, 0, 0, PM_REMOVE)){
+            switch (msg.message){
+                // case WM_KEYDOWN:
+                //     running = 0;
+                //     break;
+                // case WM_KEYUP:
+                //     running = 0;
+                //     break;
+                default:
+                    TranslateMessage(&msg);
+                    DispatchMessage(&msg);
+
+            } 
+
+        }
+
+        time++;
+
+        //Simulation
+        clear_screen_gradient(0x1b85b8, 0xffffff);
+        draw_rect((int_vector2){500, 250}, (int_vector2){500, 250}, 0x551100);
+        draw_text("0.123:456789", 12, (int_vector2){500, 500}, 5, 0xffffff);
+        draw_text(int_to_string(time), log10(time)+1, (int_vector2){500, 300}, 6, 0xffff33);
+        int lerp_value = lerp_int(0, 10000, (float)time/10000);
+        draw_text(int_to_string(lerp_value), log10(lerp_value) + 1, (int_vector2){300, 300}, 5, 0xffffff);
+
+
 
 		//Render
 		StretchDIBits(hdc, 0, 0, render_buffer.width, render_buffer.height, 0, 0, render_buffer.width, render_buffer.height, render_buffer.pixels, &render_buffer.bitmap, DIB_RGB_COLORS, SRCCOPY);
 	}
+}
 
-/*
-    WNDCLASSEX wc;
-    HWND hwnd;
-    MSG Msg;
+char* int_to_string(int number){
+    int size = log10(number) + 1;
 
-    //Step 1: Registering the Window Class
-    wc.cbSize        = sizeof(WNDCLASSEX);
-    wc.style         = 0;
-    wc.lpfnWndProc   = WndProc;
-    wc.cbClsExtra    = 0;
-    wc.cbWndExtra    = 0;
-    wc.hInstance     = hInstance;
-    wc.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
-    wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-    wc.lpszMenuName  = NULL;
-    wc.lpszClassName = g_szClassName;
-    wc.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
-
-    if(!RegisterClassEx(&wc))
-    {
-        MessageBox(NULL, "Window Registration Failed!", "Error!",
-            MB_ICONEXCLAMATION | MB_OK);
-        return 0;
+    char* result = malloc(sizeof(char) * size);
+    for (int i = size-1; i >= 0; i--){
+        result[i] = (number%10) + '0';
+        number/=10;
     }
 
-    // Step 2: Creating the Window
-    hwnd = CreateWindowEx}(
-        WS_EX_CLIENTEDGE,
-        g_szClassName,
-        "The title of my window",
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 240, 120,
-        NULL, NULL, hInstance, NULL);
-
-    if(hwnd == NULL)
-    {
-        MessageBox(NULL, "Window Creation Failed!", "Error!",
-            MB_ICONEXCLAMATION | MB_OK);
-        return 0;
-    }
-
-    ShowWindow(hwnd, nCmdShow);
-    UpdateWindow(hwnd);
-
-    // Step 3: The Message Loop
-    while(GetMessage(&Msg, NULL, 0, 0) > 0)
-    {
-        TranslateMessage(&Msg);
-        DispatchMessage(&Msg);
-    }
-    return Msg.wParam;
-*/
+    return result;
 }
