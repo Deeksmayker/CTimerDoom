@@ -22,7 +22,7 @@ void clear_screen(uint32_t color){
 
 void clear_screen_gradient(uint32_t color1, uint32_t color2){
     for (int y = 0; y < render_buffer.height; y++){
-        uint32_t row_color = lerp(color1, color2, ((float)y) / ((float)render_buffer.height));
+        uint32_t row_color = lerp_color(color1, color2, ((float)y) / ((float)render_buffer.height));
         for (int x = 0; x < render_buffer.width; x++){
             render_buffer.pixels[y * render_buffer.width + x] = row_color;
         }
@@ -119,10 +119,11 @@ void draw_letter(char letter, int_vector2 pos, int pixel_size, uint32_t color){
     }
 }
 
-void draw_text(char *text, int text_length, int_vector2 pos, int pixel_size, uint32_t color){
+void draw_text(char *text, int_vector2 pos, int pixel_size, uint32_t color){
     int offset = 0;
     int width = LETTER_WIDTH;
-    for (int i = 0; i < text_length; i++){
+    int len = strlen(text);
+    for (int i = 0; i < len; i++){
         if (isdigit(text[i])){
             draw_digit((int)text[i] - '0', (int_vector2){pos.x + offset, pos.y}, pixel_size, color);
         } else{

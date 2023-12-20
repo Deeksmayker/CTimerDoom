@@ -2,6 +2,8 @@
 #include <winuser.h>
 #include <stdint.h>
 #include<math.h>
+#include <time.h>
+#include <stdio.h>
 
 //const char g_szClassName[] = "myWindowClass";
 
@@ -19,11 +21,40 @@ static Render_Buffer render_buffer;
 
 char *int_to_string(int number);
 
+int_vector2 timer_pos = {300, 300};
+int timer_move_speed = 5;
+
+static clock_t clock_ticks;
+float game_time = 0;
+int timer_running = 1;
+float idle_timer_time = 0;
+
 // Step 4: the Window Procedure
 LRESULT CALLBACK WndProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch(msg)
     {
+        case WM_KEYDOWN:
+            switch(wParam){
+                case VK_RIGHT:
+                    timer_pos.x += timer_move_speed;
+                    break;
+                case VK_LEFT:
+                    timer_pos.x -= timer_move_speed;
+                    break;
+                case VK_UP:
+                    timer_pos.y += timer_move_speed;
+                    break;
+                case VK_DOWN:
+                    timer_pos.y -= timer_move_speed;
+                    break;
+                case VK_SPACE:
+                    timer_running = !timer_running;
+                    break;
+                default:
+                    break;
+            }
+            break;
 		case WM_CLOSE:
 			DestroyWindow(window);
 			running = 0;
@@ -67,7 +98,6 @@ LRESULT CALLBACK WndProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-int time = 0;
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow){
     WNDCLASSA window_class = {0};
@@ -77,18 +107,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     RegisterClassA(&window_class);
 
-    HWND window = CreateWindowExA(0, window_class.lpszClassName, "Really cool and flexible window no viruses at all", WS_VISIBLE|WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1280, 720, 0, 0, 0, 0);
+    HWND window = CreateWindowExA(0, window_class.lpszClassName, "COOL AND GREAT real timer no shit and no viruses at all", WS_VISIBLE|WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1280, 720, 0, 0, 0, 0);
 
     HDC hdc = GetDC(window);
+
+    static clock_t old_clock;
+    old_clock = clock();
+    clock_ticks = clock();
 
     while (running){
         //Input
         MSG msg;
         while (PeekMessageA(&msg, window, 0, 0, PM_REMOVE)){
             switch (msg.message){
-                // case WM_KEYDOWN:
-                //     running = 0;
-                //     break;
                 // case WM_KEYUP:
                 //     running = 0;
                 //     break;
@@ -100,31 +131,60 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         }
 
-        time++;
+        //game_time += ((float)(clock() - clock_ticks)) / CLOCKS_PER_SEC;
+
+        // static int delta_time = 0;
+        // //delta_time = ((float)clock() - (float)old_clock) / CLOCKS_PER_SEC;
+        // delta_time = clock() - old_clock;
+        
+        static float previous_game_time = 0;
+
+        game_time = (float)clock() / CLOCKS_PER_SEC;
+
+        static float timer_value = 0;
+        static float dt = 0;
+
+
+        dt = (game_time - previous_game_time);
+
+        if (timer_running){
+            timer_value += dt;
+        } else{
+            idle_timer_time += dt;
+        }
 
         //Simulation
+        
+
         clear_screen_gradient(0x1b85b8, 0xffffff);
-        draw_rect((int_vector2){500, 250}, (int_vector2){500, 250}, 0x551100);
-        draw_text("0.123:456789", 12, (int_vector2){500, 500}, 5, 0xffffff);
-        draw_text(int_to_string(time), log10(time)+1, (int_vector2){500, 300}, 6, 0xffff33);
-        int lerp_value = lerp_int(0, 10000, (float)time/10000);
-        draw_text(int_to_string(lerp_value), log10(lerp_value) + 1, (int_vector2){300, 300}, 5, 0xffffff);
+
+        draw_text("0.123:456789", (int_vector2){500, 500}, 5, 0xffffff);
+
+        char timeArray[20];
+        sprintf(timeArray, "%.3f", timer_value);
+        draw_text(timeArray, timer_pos, 7, 0xffffff);
+
+        //Render
+        StretchDIBits(hdc, 0, 0, render_buffer.width, render_buffer.height, 0, 0, render_buffer.width, render_buffer.height, render_buffer.pixels, &render_buffer.bitmap, DIB_RGB_COLORS, SRCCOPY);
 
 
+        //Frame End
+        clock_ticks = clock();
+        old_clock = clock();
 
-		//Render
-		StretchDIBits(hdc, 0, 0, render_buffer.width, render_buffer.height, 0, 0, render_buffer.width, render_buffer.height, render_buffer.pixels, &render_buffer.bitmap, DIB_RGB_COLORS, SRCCOPY);
-	}
-}
-
-char* int_to_string(int number){
-    int size = log10(number) + 1;
-
-    char* result = malloc(sizeof(char) * size);
-    for (int i = size-1; i >= 0; i--){
-        result[i] = (number%10) + '0';
-        number/=10;
+        previous_game_time = game_time;
     }
-
-    return result;
 }
+
+// char* int_to_string(int number){
+//     if (number == 0) return "0";
+//     int size = log10(number) + 1;
+//
+//     char* result = malloc(sizeof(char) * size);
+//     for (int i = size-1; i >= 0; i--){
+//         result[i] = (number%10) + '0';
+//         number/=10;
+//     }
+//
+//     return result;
+// }
