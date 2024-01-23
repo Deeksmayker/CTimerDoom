@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <winuser.h>
 #include <stdint.h>
-#include <math.h>
+//#include <math.h>
 #include <time.h>
 #include <stdio.h>
 
@@ -122,7 +122,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     AttachConsole(ATTACH_PARENT_PROCESS);
     //for printf to work
     freopen("CONOUT$", "w", stdout);
-
+    
     while (running){
         //Input
         MSG msg;
@@ -131,9 +131,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 default:
                     TranslateMessage(&msg);
                     DispatchMessage(&msg);
-
             } 
-
         }
         
         static float previous_game_time = 0;
@@ -154,7 +152,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         //Simulation
         
-        clear_screen_three_color(0xf06553, 0xffffff, 0x1b85b8);
+        uint32_t *colors = malloc(5 * sizeof(int));
+        colors[0] = 0xf6abb9;
+        colors[1] = 0xffffff;
+        colors[2] = 0xf0b3c1;
+        colors[3] = 0x333333;
+        colors[4] = 0x6fcafc;
+        clear_screen_gradient(colors, 5);
+        //clear_screen_three_color(0xf06553, 0xffffff, 0x1b85b8);
 
         draw_text("0.123:456789", (int_vector2){500, 500}, 5, 0xffffff);
 

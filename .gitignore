@@ -53,4 +53,8 @@ dkms.conf
 
 #my
 *.VC*
+*.VC
 *.ipch
+*.suo
+.suo
+*.db

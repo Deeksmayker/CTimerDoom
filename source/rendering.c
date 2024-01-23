@@ -19,9 +19,9 @@ void clear_screen(uint32_t color){
     // }
 }
 
-void clear_screen_gradient(uint32_t color1, uint32_t color2){
+void clear_screen_gradient(uint32_t *colors, int colors_count){
     for (int y = 0; y < render_buffer.height; y++){
-        uint32_t row_color = lerp_color(color1, color2, ((float)y) / ((float)render_buffer.height));
+        uint32_t row_color = lerp_colors(colors, colors_count, ((float)y) / ((float)render_buffer.height));
         for (int x = 0; x < render_buffer.width; x++){
             render_buffer.pixels[y * render_buffer.width + x] = row_color;
         }
@@ -31,9 +31,10 @@ void clear_screen_gradient(uint32_t color1, uint32_t color2){
 
 void clear_screen_three_color(uint32_t color1, uint32_t color2, uint32_t color3){
     for (int y = 0; y < render_buffer.height; y++){
-        uint32_t ab = lerp_color(color1, color2, ((float)y) / ((float)render_buffer.height));
-        uint32_t bc = lerp_color(color2, color3, ((float)y) / ((float)render_buffer.height));
-        uint32_t row_color = lerp_color(ab, bc, ((float)y) / ((float)render_buffer.height));
+        float t = ((float)y) / ((float)render_buffer.height);
+        uint32_t ab        = lerp_color(color1, color2, t);
+        uint32_t bc        = lerp_color(color2, color3, t);
+        uint32_t row_color = lerp_color(ab,     bc,     t);
         for (int x = 0; x < render_buffer.width; x++){
             render_buffer.pixels[y * render_buffer.width + x] = row_color;
         }
@@ -51,8 +52,8 @@ void draw_rect(int_vector2 pos, int_vector2 size, uint32_t color){
     pos.x %= render_buffer.width;
     pos.y %= render_buffer.height;
 
-    pos.x = clamp_int(pos.x, 0, render_buffer.width - size.x - 1);
-    pos.y = clamp_int(pos.y, 0, render_buffer.height - size.x - 1);
+    clamp_int(&pos.x, 0, render_buffer.width - size.x - 1);
+    clamp_int(&pos.y, 0, render_buffer.height - size.x - 1);
 
     //if (pos.x == 0) pos.x += render_buffer.width - 1;
 
