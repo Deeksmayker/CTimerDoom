@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <winuser.h>
 #include <stdint.h>
-#include<math.h>
+#include <math.h>
 #include <time.h>
 #include <stdio.h>
 
@@ -114,15 +114,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     static clock_t old_clock;
     old_clock = clock();
     clock_ticks = clock();
+    
+    //AllocConsole();
+    AttachConsole(ATTACH_PARENT_PROCESS);
+    //for printf to work
+    freopen("CONOUT$", "w", stdout);
 
     while (running){
         //Input
         MSG msg;
         while (PeekMessageA(&msg, window, 0, 0, PM_REMOVE)){
             switch (msg.message){
-                // case WM_KEYUP:
-                //     running = 0;
-                //     break;
                 default:
                     TranslateMessage(&msg);
                     DispatchMessage(&msg);
@@ -130,12 +132,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             } 
 
         }
-
-        //game_time += ((float)(clock() - clock_ticks)) / CLOCKS_PER_SEC;
-
-        // static int delta_time = 0;
-        // //delta_time = ((float)clock() - (float)old_clock) / CLOCKS_PER_SEC;
-        // delta_time = clock() - old_clock;
         
         static float previous_game_time = 0;
 
@@ -155,14 +151,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         //Simulation
         
-
-        clear_screen_gradient(0x1b85b8, 0xffffff);
+        clear_screen_three_color(0xf06553, 0xffffff, 0x1b85b8);
 
         draw_text("0.123:456789", (int_vector2){500, 500}, 5, 0xffffff);
 
+        int hours = (int)timer_value / 60 / 60;
+        int minutes = (int)timer_value / 60;
+        int seconds = (int)timer_value % 60;
+
+        draw_time(hours, minutes, seconds, timer_pos, 7, 0xffffff); 
+
         char timeArray[20];
         sprintf(timeArray, "%.3f", timer_value);
-        draw_text(timeArray, timer_pos, 7, 0xffffff);
+        draw_text(timeArray, (int_vector2){100, 100}, 5, 0xffffff);
 
         //Render
         StretchDIBits(hdc, 0, 0, render_buffer.width, render_buffer.height, 0, 0, render_buffer.width, render_buffer.height, render_buffer.pixels, &render_buffer.bitmap, DIB_RGB_COLORS, SRCCOPY);
@@ -173,18 +174,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         old_clock = clock();
 
         previous_game_time = game_time;
+
+        Sleep(30);
     }
 }
-
-// char* int_to_string(int number){
-//     if (number == 0) return "0";
-//     int size = log10(number) + 1;
-//
-//     char* result = malloc(sizeof(char) * size);
-//     for (int i = size-1; i >= 0; i--){
-//         result[i] = (number%10) + '0';
-//         number/=10;
-//     }
-//
-//     return result;
-// }
