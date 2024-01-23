@@ -66,6 +66,9 @@ LRESULT CALLBACK WndProc(HWND window, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_SIZE: {
 			RECT rect;
 			GetWindowRect(window, &rect);
+			if (rect.right < 0 || rect.left < 0){
+			    break;
+			}
 			render_buffer.width = rect.right - rect.left;
 			render_buffer.height = rect.bottom - rect.top;
 
