@@ -3,7 +3,12 @@
 typedef struct{
     int x;
     int y;
-} int_vector2;
+} Vector2_int;
+
+typedef struct{
+    float x;
+    float y;
+} Vector2;
 
 void clamp(float *value, float min, float max){
     if (*value >= max) *value = max;
@@ -51,9 +56,10 @@ int factorial(int value){
 
 int bezie(int *numbers, int n, float t){
     int result = 0x00;
-    int n_factorial = factorial(n);
     for (int i = 0; i < n - 1; i++){
-        result += (n_factorial / (factorial(n - i) * factorial(i))) * pow((float)1 - t, n - i) * pow(t, i) * numbers[i];
+        result += (factorial(n) / (factorial(n - i) * factorial(i))) // Число сочетаний n по i
+                  * pow((float)1 - t, n - i)
+                  * pow(t, i) * numbers[i];
     }
     
     result += pow(t, n) * numbers[n - 1];
@@ -68,19 +74,23 @@ int bezie_colors(uint32_t *colors, int colors_count, float fraction)
     int *blues  = malloc(colors_count * sizeof(int));    
     
     for (int i = 0; i < colors_count; i++){
-        reds[i]   = (colors[i] >> 16) & 0xff;
+        reds  [i] = (colors[i] >> 16) & 0xff;
         greens[i] = (colors[i] >> 8)  & 0xff;
-        blues[i]  =  colors[i]        & 0xff;
+        blues [i] =  colors[i]        & 0xff;
     }
     
-    return bezie(reds, colors_count, fraction)   << 16 |
-           bezie(greens, colors_count, fraction) << 8  |
-           bezie(blues, colors_count, fraction);
+    int result =  bezie(reds, colors_count, fraction)   << 16 |
+                  bezie(greens, colors_count, fraction) << 8  |
+                  bezie(blues, colors_count, fraction);
+    free(reds);
+    free(greens);
+    free(blues);
+    return result;
 }
 
 int lerp_colors(uint32_t *colors, int colors_count, float fraction){
-    clamp(&fraction, (float)0, (float)0.9999999);
-    int index = lerp_int(0, colors_count-1, fraction);
+    //clamp(&fraction, (float)0, (float)0.9999999);
+    int index  = lerp_int(0, colors_count-1, fraction);
     int color1 = colors[index];
     int color2 = colors[index+1];
     
